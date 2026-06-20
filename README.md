@@ -1,34 +1,37 @@
-# LOOP Programm-Simulator
+# LOOP-, WHILE- & GOTO-Simulator
 
-Ein webbasierter Simulator zur Ausführung und Analyse von **LOOP-Programmen** im Kontext der *Theoretischen Informatik*.
+Ein webbasierter Simulator zur Ausführung und Analyse von **LOOP-, WHILE- und GOTO-Programmen** im Kontext der *Theoretischen Informatik*.
 
-**[Live-Version (GitHub Pages)](https://jonashuberts.github.io/LOOP-Simulator/)**
+**[Live-Version (GitHub Pages)](https://jonashuberts.github.io/Loop-While-Goto-Simulator/)**
 
 ---
 
 ## Funktionsumfang
 
-- **Interaktiver Code-Editor**: Bietet Syntax-Highlighting (Kommentare, Keywords, Zuweisungen, Variablen, Zahlen), automatische Zeilennummerierung, Unterstützung für Tab-Einrückungen (`Tab` / `Shift+Tab`) und eine automatische Code-Formatierung.
+- **Unterstützung für drei Berechnungsmodelle**: Nahtloses Umschalten zwischen **LOOP-**, **WHILE-** und **GOTO-Programmen** direkt über die Benutzeroberfläche.
+- **Interaktiver Code-Editor**: Bietet Syntax-Highlighting (Kommentare, Keywords, Zuweisungen, Variablen, Zahlen, GOTO-Labels), automatische Zeilennummerierung, Unterstützung für Tab-Einrückungen (`Tab` / `Shift+Tab`) und eine automatische Code-Formatierung.
 - **Dynamische Variablen-Erkennung**: Scannt das Programm in Echtzeit nach genutzten Registern (`x1`, `x2`, ...) und generiert automatisch entsprechende Eingabefelder zur Definition der Anfangswerte.
 - **Schritt-für-Schritt-Debugger**: Ermöglicht die zeilenweise Ausführung des Codes inklusive optischer Markierung der aktiven Zeile sowie einer vollständigen Historie aller Registeränderungen (Trace Log).
-- **Standardkonforme Semantik**:
-  - **Instruktions-Set**: Unterstützt Zuweisungen (`xi := xj + c`), Monus-Subtraktion (`xi := xj - c` mit Untergrenze `0`) und Sequenzen (`P1; P2`).
-  - **Schleifen-Auswertung**: Entsprechend der theoretischen Definition wird die Anzahl der Schleifendurchläufe beim Eintritt in ein `LOOP`-Konstrukt festgesetzt. Nachträgliche Modifikationen des Schleifenregisters innerhalb des Schleifenkörpers haben keinen Einfluss auf die Iterationsanzahl.
-- **Integrierte Lehrbeispiele**: Enthält vordefinierte Beispielprogramme für Grundrechenarten (Addition, Multiplikation, Exponentiation), den Dekrement-Operator (Predecessor) sowie bedingte Anweisungen.
+- **Semantische Spezifikationen**:
+  - **LOOP-Modus**: Die Schleifenanzahl wird beim Eintritt in ein `LOOP`-Konstrukt festgesetzt. Nachträgliche Modifikationen des Schleifenregisters haben keinen Einfluss auf die Iterationsanzahl.
+  - **WHILE-Modus**: Die Schleifenbedingung wird dynamisch vor *jeder* Iteration ausgewertet (Endlosschleifen möglich).
+  - **GOTO-Modus**: Zeilenweise Ausführung mit unbedingten (`GOTO Mk`) und bedingten (`IF xj = c GOTO Mk`) Sprüngen. Zeilenlabels (z. B. `M0:`) sind optional und werden nur auf Sprungzielen benötigt.
+  - **Modifizierte Subtraktion (Monus)**: `xi := xj -· c` subtrahiert den Wert `c` mit einer automatischen Untergrenze bei `0`.
+- **Integrierte Lehrbeispiele**: Enthält vordefinierte, strukturierte Beispielprogramme für alle drei Berechnungsmodelle (Grundrechenarten, Paritätsprüfungen, Vorgängeroperationen).
 
 ---
 
 ## Projektstruktur
 
 ```text
-├── index.html        # Benutzeroberfläche & Dokumentation
+├── index.html        # Benutzeroberfläche & Syntax-Referenz
 ├── style.css         # Visuelle Gestaltung & Layout
 └── src/
-    ├── main.js       # Applikationssteuerung & Event-Handling
-    ├── parser.js     # Lexikalische Analyse & Parser
-    ├── interpreter.js# Generator-basierter Interpreter (LOOP-Semantik)
+    ├── main.js       # Applikationssteuerung, Event-Handling & Zustandssicherung
+    ├── parser.js     # Lexikalische Analyse & Parser (Modus-spezifische Validierung)
+    ├── interpreter.js# Generator-basierter Interpreter (LOOP/WHILE/GOTO-Semantiken)
     ├── editor.js     # Editor-Hilfsfunktionen & Syntax-Highlighter
-    └── examples.js   # Datenbasis der Beispielprogramme
+    └── examples.js   # Datenbasis der Lehrbeispiele
 ```
 
 ---

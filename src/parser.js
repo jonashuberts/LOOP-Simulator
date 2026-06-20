@@ -261,21 +261,21 @@ export function parse(tokens, mode = 'LOOP') {
         break;
       }
       
-      // Each statement in GOTO must start with a LABEL
-      if (!match('LABEL')) {
-        const t = peek();
-        throw new Error(`Syntaxfehler in Zeile ${t.line}: Jede Anweisung in einem GOTO-Programm muss mit einem Label beginnen (erhalten: '${t.value}').`);
+      let label = null;
+      let startLine = peek().line;
+      
+      // Labels are optional
+      if (match('LABEL')) {
+        const labelToken = consume('LABEL');
+        label = labelToken.value;
+        startLine = labelToken.line;
+        
+        if (definedLabels.has(label)) {
+          throw new Error(`Syntaxfehler in Zeile ${labelToken.line}: Label '${label}' ist doppelt definiert.`);
+        }
+        definedLabels.add(label);
+        consume('COLON');
       }
-      
-      const labelToken = consume('LABEL');
-      const label = labelToken.value;
-      
-      if (definedLabels.has(label)) {
-        throw new Error(`Syntaxfehler in Zeile ${labelToken.line}: Label '${label}' ist doppelt definiert.`);
-      }
-      definedLabels.add(label);
-      
-      consume('COLON');
       
       let stmt = null;
       const nextToken = peek();
@@ -287,8 +287,8 @@ export function parse(tokens, mode = 'LOOP') {
           type: 'GOTO_JUMP',
           label: label,
           targetLabel: targetLabel.value,
-          line: labelToken.line,
-          text: `${label}: GOTO ${targetLabel.value}`
+          line: startLine,
+          text: label ? `${label}: GOTO ${targetLabel.value}` : `GOTO ${targetLabel.value}`
         };
       } else if (nextToken.type === 'KEYWORD' && nextToken.value === 'IF') {
         consume('KEYWORD', 'IF');
@@ -304,8 +304,8 @@ export function parse(tokens, mode = 'LOOP') {
           var: testVar.value,
           value: testValue,
           targetLabel: targetLabel.value,
-          line: labelToken.line,
-          text: `${label}: IF ${testVar.value} = ${testValue} GOTO ${targetLabel.value}`
+          line: startLine,
+          text: label ? `${label}: IF ${testVar.value} = ${testValue} GOTO ${targetLabel.value}` : `IF ${testVar.value} = ${testValue} GOTO ${targetLabel.value}`
         };
       } else if (nextToken.type === 'IDENTIFIER') {
         const target = consume('IDENTIFIER');
@@ -334,7 +334,7 @@ export function parse(tokens, mode = 'LOOP') {
           }
         }
         
-        let text = `${label}: ${target.value} := ${op1}`;
+        let text = label ? `${label}: ${target.value} := ${op1}` : `${target.value} := ${op1}`;
         if (operator) text += ` ${operator} ${op2}`;
         
         stmt = {
@@ -344,7 +344,7 @@ export function parse(tokens, mode = 'LOOP') {
           operand1: op1,
           operator: operator,
           operand2: op2,
-          line: labelToken.line,
+          line: startLine,
           text: text
         };
       } else {
