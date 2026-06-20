@@ -756,6 +756,20 @@ document.addEventListener('DOMContentLoaded', () => {
     traceLog.scrollTop = traceLog.scrollHeight;
   }
 
+  function addWarningTraceEntry(text) {
+    const empty = traceLog.querySelector('.trace-empty');
+    if (empty) empty.remove();
+    
+    const div = document.createElement('div');
+    div.className = 'trace-line flex gap-2 p-1 px-2 rounded border-l-2 text-[10.5px] border-l-amber-500 bg-amber-50/20 italic text-stone-500';
+    div.innerHTML = `
+      <span class="trace-step-num text-stone-400 min-w-[18px] text-right font-medium">#...</span>
+      <span class="trace-code flex-grow">${text}</span>
+    `;
+    traceLog.appendChild(div);
+    traceLog.scrollTop = traceLog.scrollHeight;
+  }
+
   // --- EXECUTION ---
 
   runBtn.addEventListener('click', () => {
@@ -777,10 +791,15 @@ document.addEventListener('DOMContentLoaded', () => {
         step++;
         const stepData = result.value;
         const isLoopNode = stepData.node.type === 'LOOP' || stepData.node.type === 'WHILE';
-        addTraceEntry(step, stepData.line, stepData.text, stepData.vars, isLoopNode);
         
-        if (step > 100000) {
-          throw new Error("Sicherheitsabbruch: Das Programm überschreitet 100.000 Ausführungsschritte.");
+        if (step <= 1000) {
+          addTraceEntry(step, stepData.line, stepData.text, stepData.vars, isLoopNode);
+        } else if (step === 1001) {
+          addWarningTraceEntry("Protokollierung bei 1.000 Einträgen gestoppt. Die Programmausführung läuft im Hintergrund weiter...");
+        }
+        
+        if (step > 20000) {
+          throw new Error("Sicherheitsabbruch: Das Programm überschreitet das Limit von 20.000 Ausführungsschritten (mögliche Endlosschleife).");
         }
         
         result = gen.next();
@@ -881,10 +900,15 @@ document.addEventListener('DOMContentLoaded', () => {
         debugState.stepCount++;
         const data = result.value;
         const isLoopNode = data.node.type === 'LOOP' || data.node.type === 'WHILE';
-        addTraceEntry(debugState.stepCount, data.line, data.text, data.vars, isLoopNode);
         
-        if (debugState.stepCount > 100000) {
-          throw new Error("Sicherheitsabbruch: Das Programm überschreitet 100.000 Ausführungsschritte.");
+        if (debugState.stepCount <= 1000) {
+          addTraceEntry(debugState.stepCount, data.line, data.text, data.vars, isLoopNode);
+        } else if (debugState.stepCount === 1001) {
+          addWarningTraceEntry("Protokollierung bei 1.000 Einträgen gestoppt. Die Programmausführung läuft im Hintergrund weiter...");
+        }
+        
+        if (debugState.stepCount > 20000) {
+          throw new Error("Sicherheitsabbruch: Das Programm überschreitet das Limit von 20.000 Ausführungsschritten (mögliche Endlosschleife).");
         }
         
         result = debugState.generator.next();
