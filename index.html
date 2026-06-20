@@ -66,15 +66,17 @@
           <p class="text-[10px] text-stone-400 mt-0.5">Theoretische Informatik</p>
         </div>
       </div>
-      <div>
+      <div class="flex items-center gap-2">
+        <label for="program-type-select" class="sr-only">Programmtyp</label>
+        <select id="program-type-select" class="bg-white text-stone-700 border border-stone-200 rounded-lg py-1 px-2.5 text-xs font-bold outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 cursor-pointer shadow-sm">
+          <option value="LOOP">LOOP-Programm</option>
+          <option value="WHILE">WHILE-Programm</option>
+          <option value="GOTO">GOTO-Programm</option>
+        </select>
+
         <label for="example-select" class="sr-only">Beispiel laden</label>
         <select id="example-select" class="bg-white text-stone-700 border border-stone-200 rounded-lg py-1 px-2.5 text-xs font-semibold outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 cursor-pointer shadow-sm">
           <option value="" disabled selected>Beispiel laden...</option>
-          <option value="addition">Addition (x0 := x1 + x2)</option>
-          <option value="multiplication">Multiplikation (x0 := x1 * x2)</option>
-          <option value="exponentiation">Exponentiation (x0 := x1 ^ x2)</option>
-          <option value="predecessor">Vorgänger (x0 := x1 - 1)</option>
-          <option value="conditional">Bedingung (IF x1 > 0 THEN x0 := x2)</option>
         </select>
       </div>
     </header>
@@ -213,25 +215,76 @@
 
             <!-- Tab 3: Syntax Help (Hidden by default) -->
             <div id="tab-help-content" class="w-full hidden flex flex-col gap-4 text-stone-600">
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <h3 class="text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-2">Zulässige Ausdrücke</h3>
-                  <ul class="flex flex-col gap-1.5 text-xs font-semibold">
-                    <li><code>xi := xj + c</code> <span class="text-[10px] text-stone-400 block pl-1 font-normal">Konstantenaddition</span></li>
-                    <li><code>xi := xj - c</code> <span class="text-[10px] text-stone-400 block pl-1 font-normal">Monus-Subtraktion</span></li>
-                    <li><code>xi := xj</code> <span class="text-[10px] text-stone-400 block pl-1 font-normal">Zuweisung (xj + 0)</span></li>
-                  </ul>
+              <!-- LOOP Help (Visible by default in LOOP mode) -->
+              <div id="help-loop" class="flex flex-col gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <h3 class="text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-2">Zulässige Ausdrücke</h3>
+                    <ul class="flex flex-col gap-1.5 text-xs font-semibold">
+                      <li><code>xi := xj + c</code> <span class="text-[10px] text-stone-400 block pl-1 font-normal">Konstantenaddition</span></li>
+                      <li><code>xi := xj -· c</code> <span class="text-[10px] text-stone-400 block pl-1 font-normal">Monus-Subtraktion</span></li>
+                      <li><code>xi := xj</code> <span class="text-[10px] text-stone-400 block pl-1 font-normal">Zuweisung (xj + 0)</span></li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h3 class="text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-2">Ablaufsteuerung</h3>
+                    <ul class="flex flex-col gap-1.5 text-xs font-semibold">
+                      <li><code>P1; P2</code> <span class="text-[10px] text-stone-400 block pl-1 font-normal">Anweisungssequenz</span></li>
+                      <li><code>LOOP xi DO P END</code> <span class="text-[10px] text-stone-400 block pl-1 font-normal">Wiederhole P genau xi-mal (festgesetzt bei Eintritt)</span></li>
+                    </ul>
+                  </div>
                 </div>
-                <div>
-                  <h3 class="text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-2">Ablaufsteuerung</h3>
-                  <ul class="flex flex-col gap-1.5 text-xs font-semibold">
-                    <li><code>P1; P2</code> <span class="text-[10px] text-stone-400 block pl-1 font-normal">Anweisungssequenz</span></li>
-                    <li><code>LOOP xi DO P END</code> <span class="text-[10px] text-stone-400 block pl-1 font-normal">Wiederhole P genau xi-mal</span></li>
-                  </ul>
+                <div class="p-3.5 bg-orange-50/15 border border-orange-200/40 rounded-lg text-stone-500 leading-relaxed text-xs">
+                  <strong>Semantik:</strong> Register starten standardmäßig bei <code>0</code>, außer definierte Eingaben. Das Ergebnis steht am Ende in <code>x0</code>. Die modifizierte Subtraktion (Monus) deckelt bei <code>0</code>: <code>x<sub>i</sub> := max(0, x<sub>j</sub> - c)</code>.
                 </div>
               </div>
-              <div class="p-3.5 bg-orange-50/15 border border-orange-200/40 rounded-lg text-stone-500 leading-relaxed text-xs">
-                <strong>Semantik:</strong> Variablen außer den Eingaben starten bei <code>0</code>. Das Ergebnis steht am Ende in <code>x0</code>. Die modifizierte Subtraktion (Monus) deckelt bei <code>0</code>: <code>x<sub>i</sub> := max(0, x<sub>j</sub> - c)</code>.
+
+              <!-- WHILE Help (Hidden by default) -->
+              <div id="help-while" class="hidden flex flex-col gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <h3 class="text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-2">Zulässige Ausdrücke</h3>
+                    <ul class="flex flex-col gap-1.5 text-xs font-semibold">
+                      <li><code>xi := xj + c</code> <span class="text-[10px] text-stone-400 block pl-1 font-normal">Konstantenaddition</span></li>
+                      <li><code>xi := xj -· c</code> <span class="text-[10px] text-stone-400 block pl-1 font-normal">Monus-Subtraktion</span></li>
+                      <li><code>xi := xj</code> <span class="text-[10px] text-stone-400 block pl-1 font-normal">Zuweisung (xj + 0)</span></li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h3 class="text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-2">Ablaufsteuerung</h3>
+                    <ul class="flex flex-col gap-1.5 text-xs font-semibold">
+                      <li><code>P1; P2</code> <span class="text-[10px] text-stone-400 block pl-1 font-normal">Anweisungssequenz</span></li>
+                      <li><code>WHILE xi DO P END</code> <span class="text-[10px] text-stone-400 block pl-1 font-normal">Wiederhole P, solange xi != 0 ist (dynamische Prüfung)</span></li>
+                    </ul>
+                  </div>
+                </div>
+                <div class="p-3.5 bg-orange-50/15 border border-orange-200/40 rounded-lg text-stone-500 leading-relaxed text-xs">
+                  <strong>Semantik:</strong> WHILE-Programme können in Endlosschleifen laufen, falls die Schleifenbedingung nie <code>0</code> erreicht. Die restliche Variablen- und Subtraktionssemantik entspricht den LOOP-Programmen.
+                </div>
+              </div>
+
+              <!-- GOTO Help (Hidden by default) -->
+              <div id="help-goto" class="hidden flex flex-col gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <h3 class="text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-2">Instruktionen</h3>
+                    <ul class="flex flex-col gap-1.5 text-xs font-semibold">
+                      <li><code>Mi : xi := xj + c</code> <span class="text-[10px] text-stone-400 block pl-1 font-normal">Zuweisung mit Label</span></li>
+                      <li><code>Mi : xi := xj -· c</code> <span class="text-[10px] text-stone-400 block pl-1 font-normal">Monus-Subtraktion mit Label</span></li>
+                      <li><code>Mi : xi := xj</code> <span class="text-[10px] text-stone-400 block pl-1 font-normal">Direkte Registerzuweisung</span></li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h3 class="text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-2">Sprungbefehle</h3>
+                    <ul class="flex flex-col gap-1.5 text-xs font-semibold">
+                      <li><code>Mi : GOTO Mk</code> <span class="text-[10px] text-stone-400 block pl-1 font-normal">Unbedingter Sprung zu Label Mk</span></li>
+                      <li><code>Mi : IF xj = c GOTO Mk</code> <span class="text-[10px] text-stone-400 block pl-1 font-normal">Bedingter Sprung zu Mk, falls xj gleich c ist</span></li>
+                    </ul>
+                  </div>
+                </div>
+                <div class="p-3.5 bg-orange-50/15 border border-orange-200/40 rounded-lg text-stone-500 leading-relaxed text-xs">
+                  <strong>Anforderung:</strong> Jede Zeile eines GOTO-Programms muss mit einem eindeutigen Label <code>Mi:</code> beginnen. Jedes angesprungene Ziel-Label muss existieren.
+                </div>
               </div>
             </div>
 

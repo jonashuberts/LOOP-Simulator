@@ -51,7 +51,7 @@ export function autoFormatCode(rawCode) {
     const space = '  '.repeat(indentLevel);
     let formattedLine = space + trimmed;
     
-    if (trimmed.toUpperCase().startsWith('LOOP')) {
+    if (trimmed.toUpperCase().startsWith('LOOP') || trimmed.toUpperCase().startsWith('WHILE')) {
       indentLevel++;
     }
     
@@ -71,13 +71,14 @@ export function highlightCode(code) {
 
   // Capturing groups:
   // Group 1: Comments (//...)
-  // Group 2: Keywords (LOOP, DO, END)
+  // Group 2: Keywords (LOOP, DO, END, WHILE, IF, GOTO)
   // Group 3: Assignment (:=)
   // Group 4: Numbers (digits)
   // Group 5: Variables (x0, x1, etc.)
-  const regex = /(\/\/.*)|(\b(?:LOOP|DO|END)\b)|(:=)|(\b\d+\b)|(\bx\d+\b)/gi;
+  // Group 6: GOTO Labels (M0, M1, etc.)
+  const regex = /(\/\/.*)|(\b(?:LOOP|DO|END|WHILE|IF|GOTO)\b)|(:=)|(\b\d+\b)|(\bx\d+\b)|(\bM\d+\b)/gi;
 
-  return html.replace(regex, (match, p1, p2, p3, p4, p5) => {
+  return html.replace(regex, (match, p1, p2, p3, p4, p5, p6) => {
     if (p1 !== undefined) {
       return `<span class="text-stone-400 italic">${p1}</span>`;
     }
@@ -92,6 +93,9 @@ export function highlightCode(code) {
     }
     if (p5 !== undefined) {
       return `<span class="text-orange-500 font-semibold">${p5}</span>`;
+    }
+    if (p6 !== undefined) {
+      return `<span class="text-emerald-600 font-bold">${p6}</span>`;
     }
     return match;
   });

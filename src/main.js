@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const charLineCount = document.getElementById('char-line-count');
   const formatBtn = document.getElementById('format-btn');
   const exampleSelect = document.getElementById('example-select');
+  const programTypeSelect = document.getElementById('program-type-select');
   
   const highlightBackdrop = document.getElementById('highlight-backdrop');
   const highlightCodeElement = document.getElementById('highlight-code');
@@ -43,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const tabOutputsContent = document.getElementById('tab-outputs-content');
   const tabHelpContent = document.getElementById('tab-help-content');
 
-  const DEFAULT_CODE = EXAMPLES.addition;
+  const DEFAULT_CODE = EXAMPLES.LOOP.addition;
 
   // State Management
   let userInitialValues = { x1: 3, x2: 4 };
@@ -56,24 +57,109 @@ document.addEventListener('DOMContentLoaded', () => {
     nextLine: null
   };
 
-  // Initialize - Load from local storage if exists, otherwise load defaults
-  const savedCode = localStorage.getItem('loop_simulator_code');
-  if (savedCode !== null) {
-    codeInput.value = savedCode;
-  } else {
-    codeInput.value = DEFAULT_CODE;
+  let currentMode = localStorage.getItem('loop_simulator_mode') || 'LOOP';
+  programTypeSelect.value = currentMode;
+
+  function updateExamplesDropdown(mode) {
+    exampleSelect.innerHTML = '';
+    
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.disabled = true;
+    defaultOption.selected = true;
+    defaultOption.textContent = 'Beispiel laden...';
+    exampleSelect.appendChild(defaultOption);
+    
+    const examplesObj = EXAMPLES[mode];
+    for (const key in examplesObj) {
+      const option = document.createElement('option');
+      option.value = key;
+      
+      let label = key;
+      if (key === 'addition') label = 'Addition';
+      else if (key === 'multiplication') label = 'Multiplikation';
+      else if (key === 'exponentiation') label = 'Exponentiation';
+      else if (key === 'predecessor') label = 'Vorgänger';
+      else if (key === 'conditional') label = 'Bedingung';
+      else if (key === 'parity') label = 'Parität';
+      else if (key === 'subtraction') label = 'Subtraktion';
+      
+      let formula = '';
+      if (mode === 'LOOP') {
+        if (key === 'addition') formula = ' (x0 := x1 + x2)';
+        else if (key === 'multiplication') formula = ' (x0 := x1 * x2)';
+        else if (key === 'exponentiation') formula = ' (x0 := x1 ^ x2)';
+        else if (key === 'predecessor') formula = ' (x0 := x1 - 1)';
+        else if (key === 'conditional') formula = ' (IF x1 > 0 THEN x0 := x2)';
+      } else if (mode === 'WHILE') {
+        if (key === 'addition') formula = ' (x0 := x1 + x2)';
+        else if (key === 'multiplication') formula = ' (x0 := x1 * x2)';
+        else if (key === 'parity') formula = ' (x0 := x1 mod 2)';
+      } else if (mode === 'GOTO') {
+        if (key === 'addition') formula = ' (x0 := x1 + x2)';
+        else if (key === 'multiplication') formula = ' (x0 := x1 * x2)';
+        else if (key === 'subtraction') formula = ' (x0 := x1 -· x2)';
+      }
+      
+      option.textContent = `${label}${formula}`;
+      exampleSelect.appendChild(option);
+    }
   }
-  
-  const savedFilename = localStorage.getItem('loop_simulator_filename');
-  if (savedFilename !== null) {
-    filenameInput.value = savedFilename;
-  } else {
-    filenameInput.value = 'programm';
+
+  function updateHelpTabs(mode) {
+    const helpLoop = document.getElementById('help-loop');
+    const helpWhile = document.getElementById('help-while');
+    const helpGoto = document.getElementById('help-goto');
+    
+    if (helpLoop) helpLoop.classList.add('hidden');
+    if (helpWhile) helpWhile.classList.add('hidden');
+    if (helpGoto) helpGoto.classList.add('hidden');
+    
+    if (mode === 'LOOP' && helpLoop) helpLoop.classList.remove('hidden');
+    else if (mode === 'WHILE' && helpWhile) helpWhile.classList.remove('hidden');
+    else if (mode === 'GOTO' && helpGoto) helpGoto.classList.remove('hidden');
   }
-  
-  updateLineNumbers();
-  triggerVarDetection();
-  updateHighlight();
+
+  function loadModeState(mode) {
+    const savedCode = localStorage.getItem(`loop_simulator_code_${mode}`);
+    if (savedCode !== null) {
+      codeInput.value = savedCode;
+    } else {
+      const defaultExampleKey = Object.keys(EXAMPLES[mode])[0];
+      codeInput.value = EXAMPLES[mode][defaultExampleKey];
+    }
+    
+    const savedFilename = localStorage.getItem(`loop_simulator_filename_${mode}`);
+    if (savedFilename !== null) {
+      filenameInput.value = savedFilename;
+    } else {
+      const defaultExampleKey = Object.keys(EXAMPLES[mode])[0];
+      filenameInput.value = defaultExampleKey;
+    }
+    
+    updateLineNumbers();
+    triggerVarDetection();
+    updateHighlight();
+    updateExamplesDropdown(mode);
+    updateHelpTabs(mode);
+  }
+
+  // Load initial state
+  loadModeState(currentMode);
+
+  programTypeSelect.addEventListener('change', (e) => {
+    // Save state of previous mode
+    localStorage.setItem(`loop_simulator_code_${currentMode}`, codeInput.value);
+    localStorage.setItem(`loop_simulator_filename_${currentMode}`, filenameInput.value);
+    
+    currentMode = e.target.value;
+    localStorage.setItem('loop_simulator_mode', currentMode);
+    
+    loadModeState(currentMode);
+    resetOutputUI();
+    exitDebugMode();
+    switchTab('inputs');
+  });
 
   // --- TAB NAVIGATION ---
 
@@ -142,7 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
       updateLineNumbers();
       triggerVarDetection();
       updateHighlight();
-      localStorage.setItem('loop_simulator_code', codeInput.value);
+      localStorage.setItem(`loop_simulator_code_${currentMode}`, codeInput.value);
     } else if (e.key === 'Enter') {
       // Auto-indent on Enter
       e.preventDefault();
@@ -158,9 +244,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const leadingSpaces = currentLine.match(/^\s*/)[0];
       let indent = leadingSpaces;
       
-      // If parent statement is LOOP DO, increase indent by 2 spaces
+      // If parent statement is LOOP DO or WHILE DO, increase indent by 2 spaces
       const trimmed = currentLine.trim().toUpperCase();
-      if (trimmed.endsWith('DO') || trimmed.startsWith('LOOP')) {
+      if (trimmed.endsWith('DO') || trimmed.startsWith('LOOP') || trimmed.startsWith('WHILE')) {
         indent += '  ';
       }
       
@@ -170,7 +256,7 @@ document.addEventListener('DOMContentLoaded', () => {
       updateLineNumbers();
       triggerVarDetection();
       updateHighlight();
-      localStorage.setItem('loop_simulator_code', this.value);
+      localStorage.setItem(`loop_simulator_code_${currentMode}`, this.value);
     }
   });
 
@@ -178,20 +264,21 @@ document.addEventListener('DOMContentLoaded', () => {
     updateLineNumbers();
     triggerVarDetection();
     updateHighlight();
-    localStorage.setItem('loop_simulator_code', codeInput.value);
+    localStorage.setItem(`loop_simulator_code_${currentMode}`, codeInput.value);
   });
 
   formatBtn.addEventListener('click', () => {
     codeInput.value = autoFormatCode(codeInput.value);
     updateLineNumbers();
     updateHighlight();
-    localStorage.setItem('loop_simulator_code', codeInput.value);
+    localStorage.setItem(`loop_simulator_code_${currentMode}`, codeInput.value);
   });
 
   exampleSelect.addEventListener('change', (e) => {
     const key = e.target.value;
-    if (EXAMPLES[key]) {
-      codeInput.value = EXAMPLES[key];
+    const modeExamples = EXAMPLES[currentMode];
+    if (modeExamples && modeExamples[key]) {
+      codeInput.value = modeExamples[key];
       filenameInput.value = key; // Default filename to example key name
       updateLineNumbers();
       triggerVarDetection();
@@ -199,14 +286,14 @@ document.addEventListener('DOMContentLoaded', () => {
       resetOutputUI();
       exitDebugMode();
       switchTab('inputs');
-      localStorage.setItem('loop_simulator_code', codeInput.value);
-      localStorage.setItem('loop_simulator_filename', key);
+      localStorage.setItem(`loop_simulator_code_${currentMode}`, codeInput.value);
+      localStorage.setItem(`loop_simulator_filename_${currentMode}`, key);
     }
   });
 
   // Autosave filename changes
   filenameInput.addEventListener('input', () => {
-    localStorage.setItem('loop_simulator_filename', filenameInput.value);
+    localStorage.setItem(`loop_simulator_filename_${currentMode}`, filenameInput.value);
   });
 
   // --- FILE IMPORT / EXPORT (LOAD & SAVE) ---
@@ -215,18 +302,17 @@ document.addEventListener('DOMContentLoaded', () => {
   exportBtn.addEventListener('click', async () => {
     const code = codeInput.value;
     const rawName = filenameInput.value.trim();
-    // Sanitize filename to exclude forbidden characters
     const sanitizedName = rawName.replace(/[^a-zA-Z0-9_\-]/g, '') || 'programm';
     
     // Check if File System Access API is supported (Chrome, Edge, Opera)
     if ('showSaveFilePicker' in window) {
       try {
         const options = {
-          suggestedName: `${sanitizedName}.loop`,
+          suggestedName: `${sanitizedName}.${currentMode.toLowerCase()}`,
           types: [{
-            description: 'LOOP-Programmdateien',
+            description: `${currentMode}-Programmdateien`,
             accept: {
-              'text/plain': ['.loop', '.txt'],
+              'text/plain': [`.${currentMode.toLowerCase()}`, '.loop', '.txt'],
             },
           }],
         };
@@ -239,7 +325,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const lastDot = handle.name.lastIndexOf('.');
         const nameWithoutExt = lastDot !== -1 ? handle.name.substring(0, lastDot) : handle.name;
         filenameInput.value = nameWithoutExt;
-        localStorage.setItem('loop_simulator_filename', nameWithoutExt);
+        localStorage.setItem(`loop_simulator_filename_${currentMode}`, nameWithoutExt);
       } catch (err) {
         if (err.name !== 'AbortError') {
           console.error('Speicherfehler mit FS-API:', err);
@@ -258,7 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${name}.loop`;
+    a.download = `${name}.${currentMode.toLowerCase()}`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -293,8 +379,8 @@ document.addEventListener('DOMContentLoaded', () => {
       switchTab('inputs');
       
       // Save code and filename to local storage
-      localStorage.setItem('loop_simulator_code', content);
-      localStorage.setItem('loop_simulator_filename', filenameWithoutExtension);
+      localStorage.setItem(`loop_simulator_code_${currentMode}`, content);
+      localStorage.setItem(`loop_simulator_filename_${currentMode}`, filenameWithoutExtension);
     };
     reader.readAsText(file);
     fileInput.value = ''; // Reset file input selector
@@ -481,17 +567,17 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const code = codeInput.value;
       const tokens = tokenize(code);
-      const ast = parse(tokens);
+      const ast = parse(tokens, currentMode);
       const vars = getVarsForExecution();
       
-      const gen = executeProgram(ast, vars);
+      const gen = executeProgram(ast, vars, currentMode);
       let step = 0;
       let result = gen.next();
       
       while (!result.done) {
         step++;
         const stepData = result.value;
-        const isLoopNode = stepData.node.type === 'LOOP';
+        const isLoopNode = stepData.node.type === 'LOOP' || stepData.node.type === 'WHILE';
         addTraceEntry(step, stepData.line, stepData.text, stepData.vars, isLoopNode);
         
         if (step > 100000) {
@@ -534,11 +620,11 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const code = codeInput.value;
       const tokens = tokenize(code);
-      const ast = parse(tokens);
+      const ast = parse(tokens, currentMode);
       const vars = getVarsForExecution();
       
       debugState.active = true;
-      debugState.generator = executeProgram(ast, vars);
+      debugState.generator = executeProgram(ast, vars, currentMode);
       debugState.vars = vars;
       debugState.stepCount = 0;
       debugState.ast = ast;
@@ -581,7 +667,7 @@ document.addEventListener('DOMContentLoaded', () => {
     highlightLineInGutter(data.line);
     debugLineNum.textContent = data.line;
     
-    const isLoopNode = data.node.type === 'LOOP';
+    const isLoopNode = data.node.type === 'LOOP' || data.node.type === 'WHILE';
     addTraceEntry(debugState.stepCount, data.line, data.text, data.vars, isLoopNode);
     
     renderVariablesTable(data.vars);
@@ -595,7 +681,7 @@ document.addEventListener('DOMContentLoaded', () => {
       while (!result.done) {
         debugState.stepCount++;
         const data = result.value;
-        const isLoopNode = data.node.type === 'LOOP';
+        const isLoopNode = data.node.type === 'LOOP' || data.node.type === 'WHILE';
         addTraceEntry(debugState.stepCount, data.line, data.text, data.vars, isLoopNode);
         
         if (debugState.stepCount > 100000) {
