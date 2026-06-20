@@ -143,6 +143,8 @@ document.addEventListener('DOMContentLoaded', () => {
       filenameExtension.textContent = `.${mode.toLowerCase()}`;
     }
     
+    codeInput.placeholder = `// Schreibe dein ${mode}-Programm hier...`;
+    
     updateLineNumbers();
     triggerVarDetection();
     updateHighlight();
@@ -303,8 +305,8 @@ document.addEventListener('DOMContentLoaded', () => {
       tempDiv.style.position = 'absolute';
       tempDiv.style.left = '-9999px';
       tempDiv.style.top = '0';
-      tempDiv.style.padding = '48px';
-      tempDiv.style.background = 'linear-gradient(135deg, #ffedd5 0%, #fed7aa 50%, #fafaf9 100%)';
+      tempDiv.style.padding = '8px';
+      tempDiv.style.background = 'transparent';
       tempDiv.style.display = 'inline-block';
       tempDiv.style.boxSizing = 'border-box';
 
@@ -312,8 +314,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const card = document.createElement('div');
       card.style.background = '#ffffff';
       card.style.borderRadius = '12px';
-      card.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.02)';
-      card.style.border = '1px solid rgba(0, 0, 0, 0.05)';
+      card.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.02)';
+      card.style.border = '1px solid rgba(0, 0, 0, 0.08)';
       card.style.overflow = 'hidden';
       card.style.minWidth = '480px';
       card.style.maxWidth = '900px';
