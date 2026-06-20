@@ -89,3 +89,11 @@
 #highlight-code .font-bold { font-weight: 700 !important; }
 #highlight-code .font-semibold { font-weight: 600 !important; }
 #highlight-code .italic { font-style: italic !important; }
+
+/* Highlight other occurrences of double-clicked variables or labels */
+.variable-highlight {
+  background-color: rgba(249, 115, 22, 0.2) !important;
+  border-radius: 2px !important;
+  box-shadow: 0 0 0 1px rgba(249, 115, 22, 0.4) !important;
+  transition: background-color 0.1s ease, box-shadow 0.1s ease;
+}

@@ -219,8 +219,43 @@ document.addEventListener('DOMContentLoaded', () => {
     charLineCount.textContent = `Zeilen: ${totalLines} | Zeichen: ${totalChars}`;
   }
 
+  let activeHighlightedVar = null;
+
+  function highlightOccurrences(varName) {
+    clearOccurrencesHighlight();
+    activeHighlightedVar = varName;
+    
+    const upperVar = varName.toUpperCase();
+    const spans = highlightCodeElement.querySelectorAll('span');
+    spans.forEach(span => {
+      if (span.textContent.toUpperCase() === upperVar) {
+        span.classList.add('variable-highlight');
+      }
+    });
+  }
+
+  function clearOccurrencesHighlight() {
+    if (activeHighlightedVar) {
+      const spans = highlightCodeElement.querySelectorAll('.variable-highlight');
+      spans.forEach(span => {
+        span.classList.remove('variable-highlight');
+      });
+      activeHighlightedVar = null;
+    }
+  }
+
   function updateHighlight() {
     highlightCodeElement.innerHTML = highlightCode(codeInput.value);
+    
+    // Re-trigger highlighting on current selection if active
+    const start = codeInput.selectionStart;
+    const end = codeInput.selectionEnd;
+    if (start !== end) {
+      const selectedText = codeInput.value.substring(start, end).trim();
+      if (/^[xM]\d+$/i.test(selectedText)) {
+        highlightOccurrences(selectedText);
+      }
+    }
   }
 
   // Scroll Sync Gutter, Backdrop and Interactive Textarea
@@ -228,6 +263,21 @@ document.addEventListener('DOMContentLoaded', () => {
     lineGutter.scrollTop = codeInput.scrollTop;
     highlightBackdrop.scrollTop = codeInput.scrollTop;
     highlightBackdrop.scrollLeft = codeInput.scrollLeft;
+  });
+
+  document.addEventListener('selectionchange', () => {
+    if (document.activeElement === codeInput) {
+      const start = codeInput.selectionStart;
+      const end = codeInput.selectionEnd;
+      if (start !== end) {
+        const selectedText = codeInput.value.substring(start, end).trim();
+        if (/^[xM]\d+$/i.test(selectedText)) {
+          highlightOccurrences(selectedText);
+          return;
+        }
+      }
+    }
+    clearOccurrencesHighlight();
   });
 
   codeInput.addEventListener('keydown', function(e) {
