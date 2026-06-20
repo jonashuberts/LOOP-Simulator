@@ -250,7 +250,32 @@ document.addEventListener('DOMContentLoaded', () => {
       const currentLine = val.substring(lineStart, lineEnd);
       
       let indent = '';
-      const isCommentLine = /^\s*\/\//.test(currentLine);
+      
+      // Analyze current line for comments
+      const lineCommentIndex = currentLine.indexOf('//');
+      const blockCommentIndex = currentLine.indexOf('/*');
+      
+      let commentIndex = -1;
+      let commentType = null;
+      
+      if (lineCommentIndex !== -1 && blockCommentIndex !== -1) {
+        if (lineCommentIndex < blockCommentIndex) {
+          commentIndex = lineCommentIndex;
+          commentType = 'line';
+        } else {
+          commentIndex = blockCommentIndex;
+          commentType = 'block';
+        }
+      } else if (lineCommentIndex !== -1) {
+        commentIndex = lineCommentIndex;
+        commentType = 'line';
+      } else if (blockCommentIndex !== -1) {
+        commentIndex = blockCommentIndex;
+        commentType = 'block';
+      }
+      
+      const isCommentLine = commentIndex !== -1;
+      const isBlockCommentMidLine = /^\s*\*/.test(currentLine) && !isCommentLine;
       
       const nextLinePos = val.indexOf('\n', start);
       const endOfLine = nextLinePos === -1 ? val.length : nextLinePos;
@@ -258,7 +283,16 @@ document.addEventListener('DOMContentLoaded', () => {
       const isAtEndOfLine = restOfLine.trim() === '';
       
       if (isCommentLine && !isAtEndOfLine) {
-        const match = currentLine.match(/^(\s*\/\/)\s*/);
+        if (commentType === 'line') {
+          // Align new line comment directly under the starting position of '//'
+          indent = ' '.repeat(commentIndex) + '// ';
+        } else if (commentType === 'block') {
+          // Align new block comment line '*' directly under the '*' of '/*'
+          indent = ' '.repeat(commentIndex + 1) + '* ';
+        }
+      } else if (isBlockCommentMidLine && !isAtEndOfLine) {
+        // Continue block comment mid-line starting with '*'
+        const match = currentLine.match(/^(\s*\*)\s*/);
         if (match) {
           indent = match[1] + ' ';
         }

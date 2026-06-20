@@ -99,13 +99,13 @@ export function highlightCode(code) {
     .replace(/>/g, '&gt;');
 
   // Capturing groups:
-  // Group 1: Comments (//...)
+  // Group 1: Block comments (/*...*/) or line comments (//...)
   // Group 2: Keywords (LOOP, DO, END, WHILE, IF, GOTO)
   // Group 3: Assignment (:=)
   // Group 4: Numbers (digits)
   // Group 5: Variables (x0, x1, etc.)
   // Group 6: GOTO Labels (M0, M1, etc.)
-  const regex = /(\/\/.*)|(\b(?:LOOP|DO|END|WHILE|IF|GOTO)\b)|(:=)|(\b\d+\b)|(\bx\d+\b)|(\bM\d+\b)/gi;
+  const regex = /(\/\*[\s\S]*?\*\/|\/\/.*)|(\b(?:LOOP|DO|END|WHILE|IF|GOTO)\b)|(:=)|(\b\d+\b)|(\bx\d+\b)|(\bM\d+\b)/gi;
 
   return html.replace(regex, (match, p1, p2, p3, p4, p5, p6) => {
     if (p1 !== undefined) {
