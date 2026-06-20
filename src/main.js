@@ -249,13 +249,22 @@ document.addEventListener('DOMContentLoaded', () => {
       const lineEnd = start;
       const currentLine = val.substring(lineStart, lineEnd);
       
-      const leadingSpaces = currentLine.match(/^\s*/)[0];
-      let indent = leadingSpaces;
-      
-      // If parent statement is LOOP DO or WHILE DO, increase indent by 2 spaces
-      const trimmed = currentLine.trim().toUpperCase();
-      if (trimmed.endsWith('DO') || trimmed.startsWith('LOOP') || trimmed.startsWith('WHILE')) {
-        indent += '  ';
+      let indent = '';
+      const isCommentLine = /^\s*\/\//.test(currentLine);
+      if (isCommentLine) {
+        const match = currentLine.match(/^(\s*\/\/)\s*/);
+        if (match) {
+          indent = match[1] + ' ';
+        }
+      } else {
+        const leadingSpaces = currentLine.match(/^\s*/)[0];
+        indent = leadingSpaces;
+        
+        // If parent statement is LOOP DO or WHILE DO, increase indent by 2 spaces
+        const trimmed = currentLine.trim().toUpperCase();
+        if (trimmed.endsWith('DO') || trimmed.startsWith('LOOP') || trimmed.startsWith('WHILE')) {
+          indent += '  ';
+        }
       }
       
       this.value = val.substring(0, start) + '\n' + indent + val.substring(end);
